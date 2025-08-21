@@ -26,7 +26,7 @@ class Step4Request extends FormRequest
             'ability.can_walk' => 'nullable|in:yes,no,with_help',
             'ability.uses_hands' => 'nullable|in:yes,no,one_hand',
             'ability.target_goals' => 'nullable|array',
-            'child_image' => 'nullable|image|max:5120',
+            // 'child_image' => 'nullable|image|max:5120',
         ];
     }
 }

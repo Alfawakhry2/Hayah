@@ -23,10 +23,11 @@ class Step2Request extends FormRequest
     {
         return [
             'child.name' => 'required|string|max:255',
-            'child.birth_date' => 'nullable|date',
-            'child.gender' => 'string|in:male,female',
+            'child.birth_date' => 'required|date',
+            'child.gender' => 'required|string|in:male,female',
             'child.nationality' => 'nullable|string',
             'child.city' => 'nullable|string',
+            'child.image' => 'nullable|image|max:5120'
         ];
     }
 }
