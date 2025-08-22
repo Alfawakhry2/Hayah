@@ -8,6 +8,7 @@ use Illuminate\Support\Str;
 use App\Services\OtpService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -250,11 +251,20 @@ class RegisterController extends Controller
         // Mark registration complete
         $user->update(['is_complete' => true]);
 
+        // return response()->json([
+        //     'message' => 'Registration complete. Account created successfully , go to login.',
+        //     'ability_id' => $ability->id,
+        //     'Login_Endpoint' => 'api/login'
+        // ]);
+
+        $token = JWTAuth::fromUser($user);
+
         return response()->json([
-            'message' => 'Registration complete. Account created successfully , go to login.',
-            'ability_id' => $ability->id,
-            'Login_Endpoint' => 'api/login'
-        ]);
+            'message' => 'Register Completed , Welcome To Our App',
+            'access_token' => $token,
+            'token_type' => 'bearer',
+            'expires_in' => auth('api')->factory()->getTTL() * 60
+        ], 200);
     }
 
     // Helper function to find user by registration_token

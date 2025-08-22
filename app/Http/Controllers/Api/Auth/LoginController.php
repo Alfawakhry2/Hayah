@@ -32,8 +32,8 @@ class LoginController extends Controller
 
         // 1. Check if user exists
         $user = User::where('phone', $request->phone)
-        ->where('phone_code' , $request->phone_code)
-        ->first();
+            ->where('phone_code', $request->phone_code)
+            ->first();
         if (!$user) {
             return response()->json([
                 'error' => 'User not found'
@@ -50,13 +50,22 @@ class LoginController extends Controller
         }
 
         // 3. لو OTP موجود → نتحقق منه
-        if (!OtpService::verifyOtp($user->phone_code . $user->phone , $request->otp)) {
+        if (!OtpService::verifyOtp($user->phone_code . $user->phone, $request->otp)) {
             return response()->json([
                 'error' => 'Invalid or expired OTP'
             ], 401);
         }
 
-        // 4. لو OTP صح → نديله JWT token
+        // 4. لو OTP صح → نشوف حالة التسجيل
+        $nextStep = $this->getNextStepEndpoint($user);
+        if ($nextStep !== null) {
+            return response()->json([
+                'message' => 'Registration not complete',
+                'registration_token' => $user->registration_token ,
+                'next_endpoint' => $nextStep,
+            ], 403);
+        }
+
         $token = JWTAuth::fromUser($user);
 
         return response()->json([
@@ -111,6 +120,27 @@ class LoginController extends Controller
         }
     }
 
+    protected function getNextStepEndpoint(User $user)
+    {
+        // Determine which step the user needs to complete
+        if (!$user->children()->exists()) {
+            return 'api/register/step2';
+        }
+
+        $child = $user->children()->latest()->first();
+
+        if (!$child->medicalInfo()->exists()) {
+            return 'api/register/step3';
+        }
+
+        if (!$child->ability()->exists()) {
+            return 'api/register/step4';
+        }
+
+        return null;
+    }
+
+
     // public function resendOtp(Request $request): JsonResponse
     // {
     //     $validator = Validator::make($request->all(), [
@@ -138,25 +168,5 @@ class LoginController extends Controller
     //     return response()->json([
     //         'message' => 'OTP resent successfully'
     //     ]);
-    // }
-
-    // protected function getNextStepEndpoint(User $user): string
-    // {
-    //     // Determine which step the user needs to complete
-    //     if (!$user->children()->exists()) {
-    //         return 'api/register/step2';
-    //     }
-
-    //     $child = $user->children()->latest()->first();
-
-    //     if (!$child->medicalInfo()->exists()) {
-    //         return 'api/register/step3';
-    //     }
-
-    //     if (!$child->ability()->exists()) {
-    //         return 'api/register/step4';
-    //     }
-
-    //     return 'api/register/step2'; // Default to step2
     // }
 }
