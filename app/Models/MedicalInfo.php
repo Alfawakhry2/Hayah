@@ -13,7 +13,6 @@ class MedicalInfo extends Model
     protected $casts = [
         'has_seizures' => 'boolean' ,
         'on_medication' => 'boolean' ,
-
     ];
 
 

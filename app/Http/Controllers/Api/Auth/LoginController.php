@@ -17,8 +17,10 @@ class LoginController extends Controller
     public function login(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
+            'phone_code' => 'required|exists:countries,phone_code',
             'phone' => 'required|string',
-            'password' => 'required',
+            // to not change the endPoint
+            'otp'   => 'nullable|string'
         ]);
 
         if ($validator->fails()) {
@@ -28,58 +30,41 @@ class LoginController extends Controller
             ], 422);
         }
 
-        $credentials = $request->only('phone', 'password');
-
-        try {
-            if (!$token = JWTAuth::attempt($credentials)) {
-                return response()->json([
-                    'error' => 'Invalid Credentials',
-                ], 401);
-            }
-
-            $user = User::where('phone', $request->phone)->first();
-
-            // Check if phone is verified
-            if (!$user->phone_verified_at) {
-                // Resend OTP for verification
-                $otp = OtpService::sendOtp($user->phone);
-
-                // Invalidate the temporary token
-                JWTAuth::invalidate($token);
-
-                return response()->json([
-                    'message' => 'Phone not verified. OTP sent for verification.',
-                    'register_token' => $user->register_token,
-                    'next_endpoint' => 'api/register/verify-phone'
-                ], 403);
-            }
-
-            // Check if registration is complete
-            if (!$user->is_complete) {
-                // Invalidate the temporary token
-                JWTAuth::invalidate($token);
-
-                return response()->json([
-                    'message' => 'Registration not complete',
-                    'register_token' => $user->register_token,
-                    'next_endpoint' => $this->getNextStepEndpoint($user)
-                ], 403);
-            }
-
-            // Create new token for the fully authenticated user
-            $token = JWTAuth::fromUser($user);
-
+        // 1. Check if user exists
+        $user = User::where('phone', $request->phone)
+        ->where('phone_code' , $request->phone_code)
+        ->first();
+        if (!$user) {
             return response()->json([
-                'access_token' => $token,
-                'token_type' => 'bearer',
-                'expires_in' => auth('api')->factory()->getTTL() * 60
-            ], 200);
-
-        } catch (JWTException $e) {
-            return response()->json([
-                'error' => 'Could not create token'
-            ], 500);
+                'error' => 'User not found'
+            ], 404);
         }
+
+        if (!$request->input('otp')) {
+            OtpService::sendOtp($user->phone_code . $user->phone);
+
+            return response()->json([
+                'message' => 'OTP sent. Please verify to continue.',
+                'next_endpoint' => 'api/auth/login (with otp)'
+            ], 200);
+        }
+
+        // 3. لو OTP موجود → نتحقق منه
+        if (!OtpService::verifyOtp($user->phone_code . $user->phone , $request->otp)) {
+            return response()->json([
+                'error' => 'Invalid or expired OTP'
+            ], 401);
+        }
+
+        // 4. لو OTP صح → نديله JWT token
+        $token = JWTAuth::fromUser($user);
+
+        return response()->json([
+            'message' => 'Login successful',
+            'access_token' => $token,
+            'token_type' => 'bearer',
+            'expires_in' => auth('api')->factory()->getTTL() * 60
+        ], 200);
     }
 
     public function logout(): JsonResponse
@@ -101,7 +86,7 @@ class LoginController extends Controller
         try {
             $user = auth()->user();
             return response()->json([
-                'user' => $user ,
+                'user' => $user,
             ], 200);
         } catch (JWTException $e) {
             return response()->json([
