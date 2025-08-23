@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('children', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete()->cascadeOnUpdate();
             $table->string('name');
             $table->date('birth_date')->nullable();
             $table->enum('gender', ['male', 'female'])->nullable();
@@ -21,7 +21,11 @@ return new class extends Migration
             $table->string('city')->nullable();
             $table->string('image')->nullable();
             $table->timestamps();
+            
         });
+
+
+
     }
 
     /**

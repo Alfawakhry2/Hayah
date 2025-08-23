@@ -37,7 +37,7 @@ class RegisterController extends Controller
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
-            'phone_code'=> $data['phone_code'],
+            'phone_code' => $data['phone_code'],
             'phone' => $data['phone'],
             'password' => Hash::make($data['password']),
             'registration_token' => (string) Str::uuid(),
@@ -132,14 +132,27 @@ class RegisterController extends Controller
             $imagePath = $request->file('image')->store('children', 'public');
         }
 
-        $child = $user->children()->create([
-            'name' => $childData['name'],
-            'birth_date' => $childData['birth_date'],
-            'gender' => $childData['gender'],
-            'nationality' => $childData['nationality'] ?? null,
-            'city' => $childData['city'] ?? null,
-            'image' => $imagePath,
-        ]);
+        $child = $user->children()->first();
+
+        if ($child) {
+            $child->update([
+                'name' => $childData['name'],
+                'birth_date' => $childData['birth_date'],
+                'gender' => $childData['gender'],
+                'nationality' => $childData['nationality'] ?? null,
+                'city' => $childData['city'] ?? null,
+                'image' => $imagePath,
+            ]);
+        } else {
+            $child = $user->children()->create([
+                'name' => $childData['name'],
+                'birth_date' => $childData['birth_date'],
+                'gender' => $childData['gender'],
+                'nationality' => $childData['nationality'] ?? null,
+                'city' => $childData['city'] ?? null,
+                'image' => $imagePath,
+            ]);
+        }
 
         return response()->json([
             'message' => 'Step 2 completed. Child information saved.',
@@ -187,20 +200,37 @@ class RegisterController extends Controller
             ], 400);
         }
 
-        $medical = $child->medicalInfo()->create([
-            'age' => $medicalData['age'] ,
-            'length' => $medicalData['length'] ,
-            'weight' => $medicalData['weight'] ,
-            'diagnosis' => $medicalData['diagnosis'] ,
-            'severity' => $medicalData['severity'] ,
-            'has_seizures' => $medicalData['has_seizures'] ,
-            'on_medication' => $medicalData['on_medication'] ,
-            'medication_name' => $medicalData['medication_name'] ?? null,
-        ]);
+        $medical = $child->medicalInfo()->first();
+
+        if ($medical) {
+            $medical->update([
+                'age' => $medicalData['age'],
+                'length' => $medicalData['length'],
+                'weight' => $medicalData['weight'],
+                'diagnosis' => $medicalData['diagnosis'],
+                'severity' => $medicalData['severity'],
+                'has_seizures' => $medicalData['has_seizures'],
+                'on_medication' => $medicalData['on_medication'],
+                'medication_name' => $medicalData['medication_name'] ?? null,
+            ]);
+        } else {
+            //medical info not found , that related to this parent
+            $medical = $child->medicalInfo()->create([
+                'age' => $medicalData['age'],
+                'length' => $medicalData['length'],
+                'weight' => $medicalData['weight'],
+                'diagnosis' => $medicalData['diagnosis'],
+                'severity' => $medicalData['severity'],
+                'has_seizures' => $medicalData['has_seizures'],
+                'on_medication' => $medicalData['on_medication'],
+                'medication_name' => $medicalData['medication_name'] ?? null,
+            ]);
+        }
 
         return response()->json([
             'message' => 'Step 3 complete. Medical information added.',
             'medical_id' => $medical->id,
+            'child_id' => $child->id,
             'next_endpoint' => 'api/register/step4'
         ]);
     }
@@ -221,7 +251,6 @@ class RegisterController extends Controller
             'ability.can_walk' => 'required|in:yes,no,with_help',
             'ability.uses_hands' => 'required|in:yes,no,one_hand',
             'ability.target_goals' => 'nullable|string',
-            // 'ability.target_goals.*' => 'string|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -241,21 +270,25 @@ class RegisterController extends Controller
             ], 400);
         }
 
-        $ability = $child->ability()->create([
-            'can_sit' => $abilityData['can_sit'] ,
-            'can_walk' => $abilityData['can_walk'] ,
-            'uses_hands' => $abilityData['uses_hands'] ,
-            'target_goals' => $abilityData['target_goals'] ?? null,
-        ]);
+        $ability = $child->ability()->first();
+        if ($ability) {
+            $ability->update([
+                'can_sit' => $abilityData['can_sit'],
+                'can_walk' => $abilityData['can_walk'],
+                'uses_hands' => $abilityData['uses_hands'],
+                'target_goals' => $abilityData['target_goals'] ?? null,
+            ]);
+        }else {
+            $ability = $child->ability()->create([
+                'can_sit' => $abilityData['can_sit'],
+                'can_walk' => $abilityData['can_walk'],
+                'uses_hands' => $abilityData['uses_hands'],
+                'target_goals' => $abilityData['target_goals'] ?? null,
+            ]);
+        }
 
         // Mark registration complete
         $user->update(['is_complete' => true]);
-
-        // return response()->json([
-        //     'message' => 'Registration complete. Account created successfully , go to login.',
-        //     'ability_id' => $ability->id,
-        //     'Login_Endpoint' => 'api/login'
-        // ]);
 
         $token = JWTAuth::fromUser($user);
 
@@ -263,7 +296,8 @@ class RegisterController extends Controller
             'message' => 'Register Completed , Welcome To Our App',
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => auth('api')->factory()->getTTL() * 60
+            'expires_in' => auth('api')->factory()->getTTL() * 60 ,
+            'child_id' =>$child->id ,
         ], 200);
     }
 
