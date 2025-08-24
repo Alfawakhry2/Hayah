@@ -22,8 +22,11 @@ class User extends Authenticatable implements JWTSubject
         'name',
         'phone',
         'email',
+        'country_id',
+        'governorate_id',
+        'nationality_id',
         'password',
-        'phone_code' ,
+        'phone_code',
         'registration_token',
         'is_complete',
         'phone_verified_at'
@@ -66,8 +69,14 @@ class User extends Authenticatable implements JWTSubject
 
 
     //relationships
-    public function children(){
+    public function children()
+    {
         ## here mean the parent (belongs to one only)
         return $this->hasMany(Child::class);
+    }
+
+    public function nationality()
+    {
+        return $this->hasMany(Nationality::class);
     }
 }

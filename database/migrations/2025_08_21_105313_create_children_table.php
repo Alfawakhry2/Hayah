@@ -17,11 +17,11 @@ return new class extends Migration
             $table->string('name');
             $table->date('birth_date')->nullable();
             $table->enum('gender', ['male', 'female'])->nullable();
-            $table->string('nationality')->nullable();
+            // $table->string('nationality')->nullable();
             $table->string('city')->nullable();
             $table->string('image')->nullable();
             $table->timestamps();
-            
+
         });
 
 

@@ -2,8 +2,10 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\PersonalController;
 use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\RegisterController;
+use App\Http\Controllers\Api\Auth\ResendOtpController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -14,11 +16,12 @@ Route::get('/user', function (Request $request) {
 
 Route::post('/register/step1', [RegisterController::class, 'step1']);
 Route::post('/register/verify-phone', [RegisterController::class, 'verifyPhone']);
-// Route::post('/resend-otp', [LoginController::class, 'resendOtp']);
-
 Route::post('/register/step2', [RegisterController::class, 'step2']);
 Route::post('/register/step3', [RegisterController::class, 'step3']);
 Route::post('/register/step4', [RegisterController::class, 'step4']);
+
+
+Route::post('/resend-otp', [ResendOtpController::class, 'resendOtp']);
 
 
 Route::post('/login', [LoginController::class, 'login']);
@@ -28,3 +31,10 @@ Route::post('/login', [LoginController::class, 'login']);
         Route::post('/refresh', [LoginController::class, 'refresh']);
         Route::get('/me', [LoginController::class, 'me']);
     });
+
+
+
+    // dropdowns
+Route::get('countries', [PersonalController::class, 'countries']);                // list countries
+Route::get('countries/{id}/governorates', [PersonalController::class, 'governorates']); // governorates per country
+Route::get('nationalities', [PersonalController::class, 'nationalities']);      // list nationalities

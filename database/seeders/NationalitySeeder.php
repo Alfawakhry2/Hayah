@@ -1,0 +1,118 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+
+class NationalitySeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+         $nationalities = [
+            ['name' => 'Egyptian'],
+            ['name' => 'Saudi'],
+            ['name' => 'Emirati'],
+            ['name' => 'American'],
+            ['name' => 'Jordanian'],
+            ['name' => 'Syrian'],
+            ['name' => 'Indian'],
+            ['name' => 'Pakistani'],
+            ['name' => 'British'],
+            ['name' => 'Canadian'],
+            ['name' => 'Australian'],
+            ['name' => 'French'],
+            ['name' => 'German'],
+            ['name' => 'Italian'],
+            ['name' => 'Spanish'],
+            ['name' => 'Chinese'],
+            ['name' => 'Japanese'],
+            ['name' => 'Korean'],
+            ['name' => 'Russian'],
+            ['name' => 'Brazilian'],
+            ['name' => 'Mexican'],
+            ['name' => 'Argentinian'],
+            ['name' => 'South African'],
+            ['name' => 'Nigerian'],
+            ['name' => 'Kenyan'],
+            ['name' => 'Turkish'],
+            ['name' => 'Iranian'],
+            ['name' => 'Iraqi'],
+            ['name' => 'Lebanese'],
+            ['name' => 'Palestinian'],
+            ['name' => 'Yemeni'],
+            ['name' => 'Omani'],
+            ['name' => 'Kuwaiti'],
+            ['name' => 'Qatari'],
+            ['name' => 'Bahraini'],
+            ['name' => 'Moroccan'],
+            ['name' => 'Algerian'],
+            ['name' => 'Tunisian'],
+            ['name' => 'Sudanese'],
+            ['name' => 'Somali'],
+            ['name' => 'Bangladeshi'],
+            ['name' => 'Sri Lankan'],
+            ['name' => 'Nepalese'],
+            ['name' => 'Afghan'],
+            ['name' => 'Indonesian'],
+            ['name' => 'Malaysian'],
+            ['name' => 'Filipino'],
+            ['name' => 'Thai'],
+            ['name' => 'Vietnamese'],
+            ['name' => 'Greek'],
+            ['name' => 'Dutch'],
+            ['name' => 'Swedish'],
+            ['name' => 'Norwegian'],
+            ['name' => 'Danish'],
+            ['name' => 'Finnish'],
+            ['name' => 'Polish'],
+            ['name' => 'Ukrainian'],
+            ['name' => 'Romanian'],
+            ['name' => 'Hungarian'],
+            ['name' => 'Czech'],
+            ['name' => 'Austrian'],
+            ['name' => 'Swiss'],
+            ['name' => 'Portuguese'],
+            ['name' => 'Belgian'],
+            ['name' => 'Irish'],
+            ['name' => 'Scottish'],
+            ['name' => 'Welsh'],
+            ['name' => 'Israeli'],
+            ['name' => 'Colombian'],
+            ['name' => 'Chilean'],
+            ['name' => 'Peruvian'],
+            ['name' => 'Venezuelan'],
+            ['name' => 'Cuban'],
+            ['name' => 'Jamaican'],
+            ['name' => 'Ghanaian'],
+            ['name' => 'Ethiopian'],
+            ['name' => 'Ugandan'],
+            ['name' => 'Tanzanian'],
+            ['name' => 'Zimbabwean'],
+            ['name' => 'Zambian'],
+            ['name' => 'Angolan'],
+            ['name' => 'Mozambican'],
+            ['name' => 'Namibian'],
+            ['name' => 'Botswanan'],
+            ['name' => 'Malawian'],
+            ['name' => 'Rwandan'],
+            ['name' => 'Burundian'],
+            ['name' => 'Congolese'],
+            ['name' => 'Cameroonian'],
+            ['name' => 'Senegalese'],
+            ['name' => 'Malian'],
+            ['name' => 'Nigerien'],
+            ['name' => 'Chadian'],
+            ['name' => 'Mauritian'],
+            ['name' => 'Maldivian'],
+            ['name' => 'Fijian'],
+            ['name' => 'New Zealander']
+        ];
+
+        DB::table('nationalities')->insert($nationalities);
+    }
+}

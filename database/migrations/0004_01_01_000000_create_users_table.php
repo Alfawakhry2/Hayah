@@ -16,6 +16,9 @@ return new class extends Migration
             $table->string('name');
             $table->string('phone_code');
             $table->string('phone')->unique();
+            $table->foreignId('country_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('governorate_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('nationality_id')->constrained()->cascadeOnDelete();
             $table->timestamp('phone_verified_at')->nullable();
             $table->string('email')->unique()->nullable();
             $table->string('password');

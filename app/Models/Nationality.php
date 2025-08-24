@@ -4,17 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Country extends Model
+class Nationality extends Model
 {
     protected $fillable = [
-        'name' , 'iso_code' , 'phone_code'
+        'name'
     ];
 
     protected $hidden = [
         'created_at' , 'updated_at'
     ];
-    
-    public function governorate(){
-        return $this->hasMany(Governorate::class);
-    }
 }
