@@ -112,6 +112,7 @@ class LoginController extends Controller
     {
         try {
             $user = auth()->user();
+            $user = User::where('id' , $user->id)->with(['country' , 'nationality' , 'children'])->get();
             // return response()->json([
             //     'user' => $user,
             // ], 200);

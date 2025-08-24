@@ -20,6 +20,7 @@ class User extends Authenticatable implements JWTSubject
      */
     protected $fillable = [
         'name',
+        'image',
         'phone',
         'email',
         'country_id',
@@ -40,8 +41,12 @@ class User extends Authenticatable implements JWTSubject
     protected $hidden = [
         'password',
         'remember_token',
+        'image'
     ];
 
+    protected $appends = [
+        'image_url'
+    ];
     /**
      * Get the attributes that should be cast.
      *
@@ -77,6 +82,20 @@ class User extends Authenticatable implements JWTSubject
 
     public function nationality()
     {
-        return $this->hasMany(Nationality::class);
+        return $this->belongsTo(Nationality::class);
+    }
+
+    public function country(){
+        return $this->belongsTo(Country::class);
+    }
+
+
+    //accessors
+
+    public function getImageUrlAttribute($value){
+        if($this->image){
+            return config('app.url').'/storage/'.$this->image;
+        }
+        return "https://placehold.co/150x150/fff/000/png";
     }
 }

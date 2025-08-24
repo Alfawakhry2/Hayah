@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class RegisterController extends Controller
@@ -22,6 +23,7 @@ class RegisterController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
+            'image' => 'nullable|image|mimes:png,jpg,jpeg',
             'email' => 'required|email|unique:users,email',
             'phone_code' => 'required|exists:countries,phone_code',
             'phone' => 'required|string|unique:users,phone',
@@ -37,6 +39,10 @@ class RegisterController extends Controller
 
         $data = $validator->validated();
 
+        if ($request->hasFile('image')) {
+            $image = $request->file('image')->store('parents' , 'public');
+        }
+
         $ok = Governorate::where('id', $data['governorate_id'])
             ->where('country_id', $data['country_id'])->exists();
         if (!$ok) {
@@ -49,6 +55,7 @@ class RegisterController extends Controller
             'email' => $data['email'],
             'phone_code' => $data['phone_code'],
             'phone' => $data['phone'],
+            'image' =>$image ?? null ,
             'country_id' => $data['country_id'],
             'governorate_id' => $data['governorate_id'],
             'nationality_id' => $data['nationality_id'],
@@ -150,6 +157,7 @@ class RegisterController extends Controller
         }
 
         $data = $validator->validated();
+
         $childData = $data['child'];
 
         // Upload child image if exists

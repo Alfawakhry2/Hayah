@@ -11,7 +11,7 @@ trait ApiResponse
             'message' => $message,
             'data' => $data,
             'error' => null,
-        ]);
+        ] , $status_code);
     }
 
     public function errorResponse($status_code, $message, $error=null)
@@ -21,6 +21,6 @@ trait ApiResponse
             'message' => $message,
             'data' => null,
             'error' => $error,
-        ]);
+        ] , $status_code);
     }
 }
