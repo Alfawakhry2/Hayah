@@ -134,23 +134,17 @@ class LoginController extends Controller
     {
         // Determine which step the user needs to complete
         if (!$user->children()->exists()) {
-            return [
-                'next_endpoint' => 'api/register/step2',
-            ];
+            return 'api/register/step2';
         }
 
         $child = $user->children()->latest()->first();
 
         if (!$child->medicalInfo()->exists()) {
-            return  [
-                'next_endpoint' => 'api/register/step3',
-            ];
+            return  'api/register/step3';
         }
 
         if (!$child->ability()->exists()) {
-            return [
-                'next_endpoint' => 'api/register/step4',
-            ];
+            return 'api/register/step4';
         }
 
         return null;
