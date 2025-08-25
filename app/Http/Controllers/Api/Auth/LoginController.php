@@ -130,34 +130,6 @@ class LoginController extends Controller
     //     }
     // }
 
-    protected function get0NextStepEndpoint(User $user)
-    {
-        // Determine which step the user needs to complete
-        if (!$user->children()->exists()) {
-            // return 'api/register/step2';
-            return $this->errorResponse(403, 'Should Register Your Child First !', [
-                'next_endpoint' => 'api/register/step2',
-            ]);
-        }
-
-        $child = $user->children()->latest()->first();
-
-        if (!$child->medicalInfo()->exists()) {
-            // return 'api/register/step3';
-            return $this->errorResponse(403, 'Should Enter Medical Information !', [
-                'next_endpoint' => 'api/register/step3',
-            ]);
-        }
-
-        if (!$child->ability()->exists()) {
-            // return 'api/register/step4';
-            return $this->errorResponse(403, 'Should Enter Children Ability Information !', [
-                'next_endpoint' => 'api/register/step4',
-            ]);
-        }
-
-        return null;
-    }
     protected function getNextStepEndpoint(User $user)
     {
         // Determine which step the user needs to complete
