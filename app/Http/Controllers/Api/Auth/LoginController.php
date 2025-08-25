@@ -16,7 +16,7 @@ use Tymon\JWTAuth\Exceptions\JWTException;
 
 class LoginController extends Controller
 {
-
+    use ApiResponse;
     public function login(Request $request): JsonResponse|ApiResource
     {
         $validator = Validator::make($request->all(), [
@@ -59,6 +59,7 @@ class LoginController extends Controller
 
         // 4. لو OTP صح → نشوف حالة التسجيل
         $nextStep = $this->getNextStepEndpoint($user);
+        // dd($nextStep);
         if ($nextStep !== null) {
             return ApiResource::make(
                 status_code: 403,
@@ -129,39 +130,55 @@ class LoginController extends Controller
     //     }
     // }
 
-    protected function getNextStepEndpoint(User $user): ApiResource|JsonResponse|null
+    protected function get0NextStepEndpoint(User $user)
     {
         // Determine which step the user needs to complete
         if (!$user->children()->exists()) {
-            return ApiResource::make(
-                status_code: 403,
-                message: 'Should Register Your Child First !',
-                data: [
-                    'next_endpoint' => 'api/register/step2',
-                ]
-            );
+            // return 'api/register/step2';
+            return $this->errorResponse(403, 'Should Register Your Child First !', [
+                'next_endpoint' => 'api/register/step2',
+            ]);
         }
 
         $child = $user->children()->latest()->first();
 
         if (!$child->medicalInfo()->exists()) {
-            return ApiResource::make(
-                status_code: 403,
-                message: 'Should Enter Medical Information !',
-                data: [
-                    'next_endpoint' => 'api/register/step3',
-                ]
-            );
+            // return 'api/register/step3';
+            return $this->errorResponse(403, 'Should Enter Medical Information !', [
+                'next_endpoint' => 'api/register/step3',
+            ]);
         }
 
         if (!$child->ability()->exists()) {
-            return ApiResource::make(
-                status_code: 403,
-                message: 'Should Enter Children Ability Information !',
-                data: [
-                    'next_endpoint' => 'api/register/step4',
-                ]
-            );
+            // return 'api/register/step4';
+            return $this->errorResponse(403, 'Should Enter Children Ability Information !', [
+                'next_endpoint' => 'api/register/step4',
+            ]);
+        }
+
+        return null;
+    }
+    protected function getNextStepEndpoint(User $user)
+    {
+        // Determine which step the user needs to complete
+        if (!$user->children()->exists()) {
+            return [
+                'next_endpoint' => 'api/register/step2',
+            ];
+        }
+
+        $child = $user->children()->latest()->first();
+
+        if (!$child->medicalInfo()->exists()) {
+            return  [
+                'next_endpoint' => 'api/register/step3',
+            ];
+        }
+
+        if (!$child->ability()->exists()) {
+            return [
+                'next_endpoint' => 'api/register/step4',
+            ];
         }
 
         return null;
