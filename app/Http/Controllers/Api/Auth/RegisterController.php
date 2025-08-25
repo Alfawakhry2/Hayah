@@ -39,9 +39,9 @@ class RegisterController extends Controller
             'email' => 'required|email|unique:users,email',
             'phone_code' => 'required|exists:countries,phone_code',
             'phone' => 'required|string|unique:users,phone',
-            'country_id' => 'required|exists:countries,id',
-            'governorate_id' => 'required|exists:governorates,id',
-            'nationality_id' => 'required|exists:nationalities,id',
+            // 'country_id' => 'required|exists:countries,id',
+            // 'governorate_id' => 'required|exists:governorates,id',
+            // 'nationality_id' => 'required|exists:nationalities,id',
             'password' => 'required|string|min:8|max:50',
         ]);
 
@@ -58,14 +58,14 @@ class RegisterController extends Controller
             $image = $request->file('image')->store('parents', 'public');
         }
 
-        $ok = Governorate::where('id', $data['governorate_id'])
-            ->where('country_id', $data['country_id'])->exists();
-        if (!$ok) {
-            return ApiResource::make(
-                status_code: 422,
-                message: 'Validation Faild Governorate does not belong to selected country',
-            );
-        }
+        // $ok = Governorate::where('id', $data['governorate_id'])
+        //     ->where('country_id', $data['country_id'])->exists();
+        // if (!$ok) {
+        //     return ApiResource::make(
+        //         status_code: 422,
+        //         message: 'Validation Faild Governorate does not belong to selected country',
+        //     );
+        // }
 
         $user = User::create([
             'name' => $data['name'],
@@ -73,9 +73,9 @@ class RegisterController extends Controller
             'phone_code' => $data['phone_code'],
             'phone' => $data['phone'],
             'image' => $image ?? null,
-            'country_id' => $data['country_id'],
-            'governorate_id' => $data['governorate_id'],
-            'nationality_id' => $data['nationality_id'],
+            // 'country_id' => $data['country_id'],
+            // 'governorate_id' => $data['governorate_id'],
+            // 'nationality_id' => $data['nationality_id'],
             'password' => Hash::make($data['password']),
             'registration_token' => (string) Str::uuid(),
             'is_complete' => false,
@@ -117,6 +117,8 @@ class RegisterController extends Controller
         }
 
         $data = $validator->validated();
+
+
         //get the user that currently register
         $user = $this->getRegistrationUser($request);
 
@@ -151,8 +153,10 @@ class RegisterController extends Controller
             'child.name' => 'required|string|max:255',
             'child.birth_date' => 'required|date',
             'child.gender' => 'required|in:male,female',
-            // 'child.nationality_id' => 'nullable|string|max:255',
-            'child.city' => 'required|string|max:255',
+            'child.country_id' => 'nullable|exists:countries,id',
+            'child.governorate_id' => 'required|exists:governorates,id',
+            'child.nationality_id' => 'required|exists:nationalities,id',
+            // 'child.city' => 'required|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
 
@@ -173,6 +177,15 @@ class RegisterController extends Controller
             $imagePath = $request->file('image')->store('children', 'public');
         }
 
+        //check governorate related to country
+        $ok = Governorate::where('id', $childData['governorate_id'])
+            ->where('country_id', $childData['country_id'])->exists();
+        if (!$ok) {
+            return ApiResource::make(
+                status_code: 422,
+                message: 'Validation Faild Governorate does not belong to selected country',
+            );
+        }
         $child = $user->children()->first();
 
         if ($child) {
@@ -181,7 +194,10 @@ class RegisterController extends Controller
                 'birth_date' => $childData['birth_date'],
                 'gender' => $childData['gender'],
                 // 'nationality' => $childData['nationality'] ?? null,
-                'city' => $childData['city'] ?? null,
+                'country_id' => $childData['country_id'] ?? null,
+                'governorate_id' => $childData['governorate_id'],
+                'nationality_id' => $childData['nationality_id'],
+                // 'city' => $childData['city'] ?? null,
                 'image' => $imagePath,
             ]);
         } else {
@@ -189,8 +205,11 @@ class RegisterController extends Controller
                 'name' => $childData['name'],
                 'birth_date' => $childData['birth_date'],
                 'gender' => $childData['gender'],
+                'country_id' => $childData['country_id'] ?? null ,
+                'governorate_id' => $childData['governorate_id'],
+                'nationality_id' => $childData['nationality_id'],
                 // 'nationality' => $childData['nationality'] ?? null,
-                'city' => $childData['city'] ?? null,
+                // 'city' => $childData['city'] ?? null,
                 'image' => $imagePath,
             ]);
         }

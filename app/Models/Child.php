@@ -7,16 +7,23 @@ use Illuminate\Database\Eloquent\Model;
 class Child extends Model
 {
     protected $fillable = [
-        'user_id','name' , 'birth_date' , 'gender' , 'nationality' , 'city' , 'image' ,
+        'user_id',
+        'name',
+        'birth_date',
+        'gender',
+        'nationality',
+        // 'city',
+        'image',
+        'country_id',
+        'governorate_id',
+        'nationality_id',
     ];
 
 
-    protected $hidden = [
-
-    ];
+    protected $hidden = [];
 
     protected $casts = [
-        'birth_date' => 'date' ,
+        'birth_date' => 'date',
 
     ];
 
@@ -24,16 +31,19 @@ class Child extends Model
 
     //relation
 
-    public function parent(){
+    public function parent()
+    {
         return $this->belongsTo(User::class);
     }
 
 
-    public function medicalInfo(){
+    public function medicalInfo()
+    {
         return $this->hasOne(MedicalInfo::class);
     }
 
-    public function ability(){
+    public function ability()
+    {
         return $this->hasOne(ChildAbility::class);
     }
 }
