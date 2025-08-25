@@ -45,7 +45,8 @@ class User extends Authenticatable implements JWTSubject
     ];
 
     protected $appends = [
-        'image_url'
+        'image_url',
+        'notification_counter'
     ];
     /**
      * Get the attributes that should be cast.
@@ -85,17 +86,24 @@ class User extends Authenticatable implements JWTSubject
         return $this->belongsTo(Nationality::class);
     }
 
-    public function country(){
+    public function country()
+    {
         return $this->belongsTo(Country::class);
     }
 
 
     //accessors
 
-    public function getImageUrlAttribute($value){
-        if($this->image){
-            return config('app.url').'/storage/'.$this->image;
+    public function getImageUrlAttribute($value)
+    {
+        if ($this->image) {
+            return config('app.url') . '/storage/' . $this->image;
         }
         return "https://placehold.co/150x150/fff/000/png";
+    }
+
+    public function getNotificationCounterAttribute()
+    {
+        return 0;
     }
 }

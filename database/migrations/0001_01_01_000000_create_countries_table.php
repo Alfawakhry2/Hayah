@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('iso_code');
             $table->string('phone_code');
+            $table->string('flag');
             $table->timestamps();
         });
     }

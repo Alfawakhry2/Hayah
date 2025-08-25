@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Auth;
 
+use App\Http\Helper\GlobalHelper;
 use App\Models\User;
 use App\Models\Child;
 use App\Models\Governorate;
@@ -12,15 +13,26 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ApiResource;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use PhpParser\Node\Stmt\Global_;
 
 class RegisterController extends Controller
 {
     use ApiResponse;
-    public function step1(Request $request): JsonResponse
+    public function step1(Request $request): JsonResponse|ApiResource
     {
+        if (!$request->has('password')) {
+            $request->merge(['password' => Str::random(8)]);
+        }
+        // if (!config('services.vonage.key') || !config('services.vonage.secret')) {
+        //     return ApiResource::make(
+        //         status_code: 500,
+        //         message: 'Vonage service not configured. Please contact support.',
+        //     );
+        // }
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'image' => 'nullable|image|mimes:png,jpg,jpeg',
@@ -30,32 +42,37 @@ class RegisterController extends Controller
             'country_id' => 'required|exists:countries,id',
             'governorate_id' => 'required|exists:governorates,id',
             'nationality_id' => 'required|exists:nationalities,id',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => 'required|string|min:8|max:50',
         ]);
 
         if ($validator->fails()) {
-            return $this->errorResponse(422, "Validation Faild", $validator->errors());
+            return ApiResource::make(
+                status_code: 422,
+                message: $validator->errors()->first(),
+            );
         }
 
         $data = $validator->validated();
 
         if ($request->hasFile('image')) {
-            $image = $request->file('image')->store('parents' , 'public');
+            $image = $request->file('image')->store('parents', 'public');
         }
 
         $ok = Governorate::where('id', $data['governorate_id'])
             ->where('country_id', $data['country_id'])->exists();
         if (!$ok) {
-            return $this->errorResponse(422, 'Governorate does not belong to selected country');
+            return ApiResource::make(
+                status_code: 422,
+                message: 'Validation Faild Governorate does not belong to selected country',
+            );
         }
-
 
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'phone_code' => $data['phone_code'],
             'phone' => $data['phone'],
-            'image' =>$image ?? null ,
+            'image' => $image ?? null,
             'country_id' => $data['country_id'],
             'governorate_id' => $data['governorate_id'],
             'nationality_id' => $data['nationality_id'],
@@ -69,25 +86,23 @@ class RegisterController extends Controller
         $otp = OtpService::sendOtp($user->phone);
 
         if (!$otp) {
-            // return response()->json([
-            //     'message' => 'Failed to send OTP. Please try again.'
-            // ], 500);
-            return $this->errorResponse(500, "Failed to send OTP. Please try again.");
+            return ApiResource::make(
+                status_code: 500,
+                message: 'Failed to send OTP. Please try again.',
+            );
         }
 
-        // return response()->json([
-        //     'message' => 'User created successfully. Please verify your phone.',
-        //     'registration_token' => $user->registration_token,
-        //     'next_endpoint' => 'api/register/verify-phone'
-        // ], 201);
-
-        return $this->successResponse(201, 'User Created Successfully , Please Verify your Phone Number', [
-            'registration_token' => $user->registration_token,
-            'next_endpoint' => 'api/register/verify-phone',
-        ]);
+        return ApiResource::make(
+            status_code: 201,
+            message: 'User Created Successfully , Please Verify your Phone Number',
+            data: [
+                'registration_token' => $user->registration_token,
+                'next_endpoint' => 'api/register/verify-phone',
+            ]
+        );
     }
 
-    public function verifyPhone(Request $request): JsonResponse
+    public function verifyPhone(Request $request): JsonResponse|ApiResource
     {
         $validator = Validator::make($request->all(), [
             'registration_token' => 'required|string',
@@ -95,12 +110,10 @@ class RegisterController extends Controller
         ]);
 
         if ($validator->fails()) {
-            // return response()->json([
-            //     'message' => 'Validation failed',
-            //     'errors' => $validator->errors()
-            // ], 422);
-
-            return $this->errorResponse(422, 'Validation Faild', $validator->errors());
+            return ApiResource::make(
+                status_code: 422,
+                message: $validator->errors()->first(),
+            );
         }
 
         $data = $validator->validated();
@@ -111,33 +124,28 @@ class RegisterController extends Controller
         $isVerified = OtpService::verifyOtp($user->phone, $data['otp']);
 
         if (!$isVerified) {
-            // return response()->json([
-            //     'message' => 'Invalid OTP code'
-            // ], 422);
-            return $this->errorResponse(422, 'Invalid OTP');
+            return ApiResource::make(
+                status_code: 422,
+                message: 'Invalid OTP'
+            );
         }
 
         $user->update(['phone_verified_at' => now()]);
 
-        // return response()->json([
-        //     'message' => 'Phone verified successfully',
-        //     'next_endpoint' => 'api/register/step2'
-        // ]);
-        return $this->successResponse(200, 'phone verfied successfully', ['next_endpoint' => 'api/register/step2']);
+        return ApiResource::make(
+            status_code: 200,
+            message: 'Phone verfied successfully',
+            data: [
+                'next_endpoint' => 'api/register/step2'
+            ]
+        );
     }
 
-    public function step2(Request $request): JsonResponse
+    public function step2(Request $request): JsonResponse|ApiResource
     {
         $user = $this->getRegistrationUser($request);
 
-        if (!$user->phone_verified_at) {
-            // return response()->json([
-            //     'message' => 'Phone verification required',
-            //     'go_to_endPoint' => 'api/register/verify-phone'
-            // ], 403);
-
-            return $this->errorResponse(403, 'Phone Verification Required', ['next_endpoint' => 'api/register/verify-phone']);
-        }
+        GlobalHelper::checkPhoneVerification($user->phone_verified_at);
 
         $validator = Validator::make($request->all(), [
             'child.name' => 'required|string|max:255',
@@ -149,11 +157,10 @@ class RegisterController extends Controller
         ]);
 
         if ($validator->fails()) {
-            // return response()->json([
-            //     'message' => 'Validation failed',
-            //     'errors' => $validator->errors()
-            // ], 422);
-            return $this->errorResponse(422, 'Validation Faild', $validator->errors());
+            return ApiResource::make(
+                status_code: 422,
+                message: $validator->errors()->first()
+            );
         }
 
         $data = $validator->validated();
@@ -188,28 +195,30 @@ class RegisterController extends Controller
             ]);
         }
 
-        // return response()->json([
-        //     'message' => 'Step 2 completed. Child information saved.',
-        //     'child_id' => $child->id,
-        //     'next_endpoint' => 'api/register/step3'
-        // ]);
-        return $this->successResponse(200, 'Step 2 Completed , Child Information Saved', [
-            'child_id' => $child->id,
-            'next_endpoint' => 'api/register/step3',
-        ]);
+        return ApiResource::make(
+            status_code: 201,
+            message: 'Step 2 Completed, Child Information Saved',
+            data: [
+                'child_id' => $child->id,
+                'next_endpoint' => 'api/register/step3'
+            ]
+        );
     }
 
-    public function step3(Request $request): JsonResponse
+    public function step3(Request $request): JsonResponse|ApiResource
     {
         $user = $this->getRegistrationUser($request);
 
-        if (!$user->phone_verified_at) {
-            // return response()->json([
-            //     'message' => 'Phone verification required',
-            //     'go_to_endPoint' => 'api/register/verify-phone'
-            // ], 403);
+        GlobalHelper::checkPhoneVerification($user->phone_verified_at);
 
-            return $this->errorResponse(403, 'Phone Verification Required', ['next_endpoint' => 'api/register/verify-phone']);
+        if (!$user->children()->exists()) {
+            return ApiResource::make(
+                status_code: 422,
+                message: 'Child Information Required',
+                data: [
+                    'next_endpoint' => 'api/register/step2'
+                ]
+            );
         }
 
         $validator = Validator::make($request->all(), [
@@ -224,11 +233,10 @@ class RegisterController extends Controller
         ]);
 
         if ($validator->fails()) {
-            // return response()->json([
-            //     'message' => 'Validation failed',
-            //     'errors' => $validator->errors()
-            // ], 422);
-            return $this->errorResponse(422, 'Validation Faild', $validator->errors());
+            return ApiResource::make(
+                status_code: 422,
+                message: $validator->errors()->first()
+            );
         }
 
         $data = $validator->validated();
@@ -236,11 +244,10 @@ class RegisterController extends Controller
         $child = $user->children()->latest()->first();
 
         if (!$child) {
-            // return response()->json([
-            //     'message' => 'Child information required before medical info'
-            // ], 400);
-
-            return $this->errorResponse(400, 'Child information required before medical info .');
+            return ApiResource::make(
+                status_code: 400,
+                message: 'Child information required before medical info .'
+            );
         }
 
         $medical = $child->medicalInfo()->first();
@@ -270,31 +277,22 @@ class RegisterController extends Controller
             ]);
         }
 
-        // return response()->json([
-        //     'message' => 'Step 3 complete. Medical information added.',
-        //     'medical_id' => $medical->id,
-        //     'child_id' => $child->id,
-        //     'next_endpoint' => 'api/register/step4'
-        // ]);
-
-        return $this->successResponse(201, 'Step 3 Completed , Medical Information Saved', [
-            'medical_id' => $medical->id,
-            'child_id' => $child->id,
-            'next_endpoint' => 'api/register/step4',
-        ]);
+        return ApiResource::make(
+            status_code: 201,
+            message: 'Step 3 Completed , Medical Information Saved',
+            data: [
+                'medical_id' => $medical->id,
+                'child_id' => $child->id,
+                'next_endpoint' => 'api/register/step4',
+            ]
+        );
     }
 
-    public function step4(Request $request): JsonResponse
+    public function step4(Request $request): JsonResponse|ApiResource
     {
         $user = $this->getRegistrationUser($request);
 
-        if (!$user->phone_verified_at) {
-            // return response()->json([
-            //     'message' => 'Phone verification required',
-            //     'go_to_endpoint' => 'api/register/verify-phone'
-            // ], 403);
-            return $this->errorResponse(403, 'Phone Verification Required', ['next_endpoint' => 'api/register/verify-phone']);
-        }
+        GlobalHelper::checkPhoneVerification($user->phone_verified_at);
 
         $validator = Validator::make($request->all(), [
             'ability.can_sit' => 'required|in:yes,no,with_help',
@@ -304,11 +302,10 @@ class RegisterController extends Controller
         ]);
 
         if ($validator->fails()) {
-            // return response()->json([
-            //     'message' => 'Validation failed',
-            //     'errors' => $validator->errors()
-            // ], 422);
-            return $this->errorResponse(422, 'Validation Faild', $validator->errors());
+            return ApiResource::make(
+                status_code: 422,
+                message: $validator->errors()->first()
+            );
         }
 
         $data = $validator->validated();
@@ -316,11 +313,10 @@ class RegisterController extends Controller
         $child = $user->children()->latest()->first();
 
         if (!$child) {
-            // return response()->json([
-            //     'message' => 'Child information required before ability info'
-            // ], 400);
-
-            return $this->errorResponse(400, 'Child information required before Ability information .');
+            return ApiResource::make(
+                status_code: 400,
+                message: 'Child information required before medical info .'
+            );
         }
 
         $ability = $child->ability()->first();
@@ -345,26 +341,21 @@ class RegisterController extends Controller
 
         $token = JWTAuth::fromUser($user);
 
-        // return response()->json([
-        //     'message' => 'Register Completed , Welcome To Our App',
-        //     'access_token' => $token,
-        //     'token_type' => 'bearer',
-        //     'expires_in' => auth('api')->factory()->getTTL() * 60,
-        //     'child_id' => $child->id,
-        // ], 200);
-
-        return $this->successResponse(201, 'Register Completed Successfully', [
-            'access_token' => $token,
-            'token_type' => 'bearer',
-            'expires_in' => auth('api')->factory()->getTTL() * 60,
-            'child_id' => $child->id,
-        ]);
+        return ApiResource::make(
+            status_code: 201,
+            message: 'Register Completed Successfully',
+            data: [
+                'access_token' => $token,
+                'token_type' => 'bearer',
+                'expires_in' => auth('api')->factory()->getTTL() * 60,
+                'child_id' => $child->id,
+            ]
+        );
     }
 
     // Helper function to find user by registration_token
     protected function getRegistrationUser(Request $request): User
     {
-        $token = null;
 
         // Accept token either as Bearer token or in request body
         // $authHeader = $request->header('Authorization');
@@ -372,21 +363,22 @@ class RegisterController extends Controller
         //     $token = substr($authHeader, 7);
         // }
 
-        if (!$token) {
-            $token = $request->input('registration_token');
-        }
+        $token = $request->input('registration_token');
 
         if (!$token) {
-            abort($this->errorResponse(401, 'Register token Required'));
-            // $user =  $this->errorResponse(401 , 'Registeration Token Required');
+            abort(ApiResource::make(
+                status_code: 422,
+                message: 'Register token Required'
+            ));
         }
 
         $user = User::where('registration_token', $token)->first();
 
         if (!$user) {
-            abort($this->errorResponse(401, 'Invalid Registeration Token'));
-            // $user =  $this->errorResponse(401 , 'Invalid Registeration Token');
-
+            abort(ApiResource::make(
+                status_code: 422,
+                message: 'Invalid Registeration Token'
+            ));
         }
 
         return $user;

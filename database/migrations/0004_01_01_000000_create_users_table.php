@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('password');
             $table->boolean('is_complete')->default(false);
             $table->string('registration_token')->nullable();
+            $table->string('image')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
