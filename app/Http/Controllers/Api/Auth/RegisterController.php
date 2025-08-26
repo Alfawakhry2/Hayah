@@ -179,7 +179,8 @@ class RegisterController extends Controller
 
         //check governorate related to country
         $ok = Governorate::where('id', $childData['governorate_id'])
-            ->where('country_id', $childData['country_id'])->exists();
+            ->orWhere('country_id', $childData['country_id'] ?? null)
+            ->exists();
         if (!$ok) {
             return ApiResource::make(
                 status_code: 422,
@@ -205,7 +206,7 @@ class RegisterController extends Controller
                 'name' => $childData['name'],
                 'birth_date' => $childData['birth_date'],
                 'gender' => $childData['gender'],
-                'country_id' => $childData['country_id'] ?? null ,
+                'country_id' => $childData['country_id'] ?? null,
                 'governorate_id' => $childData['governorate_id'],
                 'nationality_id' => $childData['nationality_id'],
                 // 'nationality' => $childData['nationality'] ?? null,

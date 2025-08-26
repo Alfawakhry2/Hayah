@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('name');
             $table->date('birth_date')->nullable();
             $table->enum('gender', ['male', 'female'])->nullable();
-            $table->foreignId('country_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('country_id')->nullable()->constrained()->cascadeOnDelete();
             $table->foreignId('governorate_id')->constrained()->cascadeOnDelete();
             $table->foreignId('nationality_id')->constrained()->cascadeOnDelete();
             // $table->string('city')->nullable();

@@ -14,7 +14,7 @@ class Child extends Model
         'nationality',
         // 'city',
         'image',
-        'country_id',
+        // 'country_id',
         'governorate_id',
         'nationality_id',
     ];
