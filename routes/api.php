@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\PersonalController;
 use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\Auth\ResendOtpController;
+use App\Http\Controllers\Api\User\ProfileController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -38,3 +39,13 @@ Route::post('/login', [LoginController::class, 'login']);
 Route::get('countries', [PersonalController::class, 'countries']);                // list countries
 Route::get('countries/{id}/governorates', [PersonalController::class, 'governorates']); // governorates per country
 Route::get('nationalities', [PersonalController::class, 'nationalities']);      // list nationalities
+
+
+
+//user
+
+Route::middleware('auth:api')->group(function(){
+    Route::get('users/{user}/profile' , [ProfileController::class , 'show']);
+    Route::match(['put' , 'patch'] , 'users/{user}/profile' , [ProfileController::class , 'update']);
+    Route::delete('users/{user}' , [ProfileController::class , 'destroy']);
+});

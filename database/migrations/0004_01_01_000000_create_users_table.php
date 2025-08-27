@@ -15,12 +15,11 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('phone_code');
-            $table->string('phone')->unique();
-            // $table->foreignId('country_id')->constrained()->cascadeOnDelete();
-            // $table->foreignId('governorate_id')->constrained()->cascadeOnDelete();
-            // $table->foreignId('nationality_id')->constrained()->cascadeOnDelete();
+            $table->string('phone')->unique()->nullable();
+            $table->foreignId('nationality_id')->nullable()->constrained()->onDelete('set null');
             $table->timestamp('phone_verified_at')->nullable();
             $table->string('email')->unique()->nullable();
+            $table->enum('gender' , ['male' , 'female'])->nullable();
             $table->string('password');
             $table->boolean('is_complete')->default(false);
             $table->string('registration_token')->nullable();
