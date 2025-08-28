@@ -45,7 +45,7 @@ Route::get('nationalities', [PersonalController::class, 'nationalities']);      
 //user
 
 Route::middleware('auth:api')->group(function(){
-    Route::get('users/{user}/profile' , [ProfileController::class , 'show']);
-    Route::match(['put' , 'patch'] , 'users/{user}/profile' , [ProfileController::class , 'update']);
-    Route::delete('users/{user}' , [ProfileController::class , 'destroy']);
+    Route::get('user/profile' , [ProfileController::class , 'show']);
+    Route::match(['put' , 'patch'] , 'user/profile' , [ProfileController::class , 'update']);
+    Route::delete('user/profile' , [ProfileController::class , 'destroy']);
 });

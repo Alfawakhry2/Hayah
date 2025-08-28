@@ -7,28 +7,22 @@ use Illuminate\Http\Request;
 use App\Http\Resources\ApiResource;
 use App\Http\Controllers\Controller;
 use App\Models\MedicalInfo;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class ProfileController extends Controller
 {
-    public function show($id)
+    public function show()
     {
-        $user = User::with('children')->find($id);
-        if (!$user) {
-            return ApiResource::make(status_code: 404, message: 'User Not Found');
-        }
+        $user = Auth::user();
         return ApiResource::make(status_code: 200, message: "User Profile", data: $user);
     }
 
 
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
-        $user = User::with('children')->find($id);
-
-        if (!$user) {
-            return ApiResource::make(status_code: 404, message: 'User Not Found' );
-        }
+        $user = Auth::user();
 
         $validator = Validator::make($request->all(), [
             // User info
@@ -87,18 +81,15 @@ class ProfileController extends Controller
     }
 
 
-    public function destroy($id){
-        $user = User::find($id);
-        if(!$user){
-            return ApiResource::make(status_code:404 , message:"User Not Found");
-        }
+    public function destroy(){
+        $user = Auth::user();
 
         $user->delete();
-        Storage::disk('public')->delete($user->image);
+        if($user->image){
+            Storage::disk('public')->delete($user->image);
+        }
 
         return ApiResource::make(status_code:200 , message:"Account Deleted");
-        
+
     }
-
-
 }
