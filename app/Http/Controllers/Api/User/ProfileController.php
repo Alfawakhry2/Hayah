@@ -16,6 +16,13 @@ class ProfileController extends Controller
     public function show()
     {
         $user = Auth::user();
+        // $user->load('children');
+        $user->load('children.medicalInfo');
+        // $user->children->each(function ($child) {
+        //     if ($child->medicalInfo) {
+        //         $child->medical_info = $child->medicalInfo;
+        //     }
+        // });
         return ApiResource::make(status_code: 200, message: "User Profile", data: $user);
     }
 
@@ -43,7 +50,7 @@ class ProfileController extends Controller
         if ($validator->fails()) {
             return ApiResource::make(
                 status_code: 422,
-                message:  $validator->errors()->first(),
+                message: $validator->errors()->first(),
             );
         }
 
@@ -75,21 +82,21 @@ class ProfileController extends Controller
 
         return ApiResource::make(
             status_code: 200,
-            message: "Profile Data Saved ",
+            message: "Profile Data Updated",
             data: $user->load('children.medicalInfo')
         );
     }
 
 
-    public function destroy(){
+    public function destroy()
+    {
         $user = Auth::user();
 
         $user->delete();
-        if($user->image){
+        if ($user->image) {
             Storage::disk('public')->delete($user->image);
         }
 
-        return ApiResource::make(status_code:200 , message:"Account Deleted");
-
+        return ApiResource::make(status_code: 200, message: "Account Deleted");
     }
 }

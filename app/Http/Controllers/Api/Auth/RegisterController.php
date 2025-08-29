@@ -39,7 +39,7 @@ class RegisterController extends Controller
             'email' => 'required|email|unique:users,email',
             'phone_code' => 'required|exists:countries,phone_code',
             'phone' => 'required|string|unique:users,phone',
-            'gender' => 'required|in:male,female',
+            'gender' => 'nullable|in:male,female',
             'nationality_id' => 'required|exists:nationalities,id',
             'password' => 'required|string|min:8|max:50',
         ]);
@@ -72,7 +72,7 @@ class RegisterController extends Controller
             'phone_code' => $data['phone_code'],
             'phone' => $data['phone'],
             'image' => $image ?? null,
-            'gender'=>$data['gender'], 
+            'gender' => $data['gender'] ?? null,
             'nationality_id' => $data['nationality_id'],
             'password' => Hash::make($data['password']),
             'registration_token' => (string) Str::uuid(),

@@ -107,6 +107,7 @@ class LoginController extends Controller
                     'children'
                 ])
                 ->first();
+            $user->load('children.medicalInfo');
 
             return ApiResource::make(status_code: 200, message: 'User Information', data: $user);
         } catch (JWTException $e) {
